@@ -4,20 +4,29 @@ GOD.draw=function(){
     /*
     * Define
     */
-    var cnvs=arguments[0].targ,
+    var args=arguments,
+        cnvs=arguments[0].targ,
         ctxt=(function(){
             if(cnvs.getContext){return cnvs.getContext('2d');}
             else{return null;}//canvas not supported
         }()),
-        //re-used lookups
         size=arguments[0].size+0.5,//for single pixel width
-        radi,//arc radius = right angle hypotenuse - defined below per 'type'
-        arcX,//arc center - defined below per 'type'
-        arcL,//arc angle - defined below per 'type'
-        recW,//reciprocal rectangle width - defined below per 'type',
+        radi,//arc radius = right angle hypotenuse
+        arcX,//arc center
+        arcL,//arc angle
+        recW,//reciprocal rectangle width
         recE,//reciprocal left edge
-        //calculation functions
-        calc={
+        mths={
+            dvdr:(function(){
+                if(args[0].dvdr===true){return 'lineTo';}
+                else{return 'moveTo';}
+            }()),
+            arc:(function(){
+                if(args[0].arc===true){return 'stroke';}
+                else{return 'beginPath';}
+            }())
+        },
+        calc={//object methods construct rectangle measurements and points per passed type
             update:function(){
                 recE=recE+recW;
                 radi=Math.sqrt(Math.pow(size,2)+Math.pow(radi,2));
@@ -48,11 +57,11 @@ GOD.draw=function(){
                 this.update();
             }
         };
-        calc[arguments[0].type]();
-        arcL=Math.asin(size/radi);//returns radian angle of sine value size/radi
+    calc[arguments[0].type]();
+    arcL=Math.asin(size/radi);//returns radian angle of sine value size/radi
     /*
     * Draw
-    */ 
+    */
     if(ctxt!==null){
         cnvs.setAttribute('height',800);
         cnvs.setAttribute('width',800);
@@ -61,13 +70,13 @@ GOD.draw=function(){
         ctxt.moveTo(0.5,0.5);
         ctxt.lineTo(0.5,size);//left
         ctxt.lineTo(recE,size);//bottom
-        ctxt.lineTo(recE,0.5);//right
+        ctxt[mths.dvdr](recE,0.5);//right
         ctxt.lineTo(0.5,0.5);//top
         ctxt.stroke();
         //arc
         ctxt.beginPath();
         ctxt.arc(arcX,size,radi,0-arcL,0,false);
-        ctxt.stroke();
+        ctxt[mths.arc]();
         //reciprocal
         ctxt.beginPath();
         ctxt.moveTo(recE,0.5);
@@ -81,6 +90,8 @@ GOD.draw=function(){
 
 GOD.draw({
     targ:document.getElementById('goldenSection'),
-    type:'r2',
-    size:200
+    type:'gs',
+    size:350,
+    dvdr:true,
+    arc:true
 });
